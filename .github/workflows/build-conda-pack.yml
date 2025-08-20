@@ -22,13 +22,7 @@ jobs:
         with:
           miniforge-version: latest
           auto-update-conda: true
-          activate-environment: sugar
           use-mamba: true
-
-      - name: Install conda-pack
-        shell: bash -l {0}
-        run: |
-          mamba install -y -c conda-forge conda-pack
 
       - name: Create SuGaR environment from upstream
         shell: bash -l {0}
@@ -38,6 +32,12 @@ jobs:
           curl -L --fail https://raw.githubusercontent.com/Anttwo/SuGaR/main/environment.yml -o environment.yml
           # Create the env named sugar
           mamba env create -f environment.yml
+
+      - name: Install conda-pack into SuGaR env
+        shell: bash -l {0}
+        run: |
+          set -euxo pipefail
+          mamba install -n sugar -y -c conda-forge conda-pack
 
       - name: Install SuGaR optional dependencies (if any)
         shell: bash -l {0}
@@ -50,7 +50,7 @@ jobs:
         shell: bash -l {0}
         run: |
           set -euxo pipefail
-          conda-pack -n sugar -o sugar-conda-env.tar.gz
+          conda run -n sugar conda-pack -o sugar-conda-env.tar.gz
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
