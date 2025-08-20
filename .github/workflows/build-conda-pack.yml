@@ -50,7 +50,7 @@ jobs:
         shell: bash -l {0}
         run: |
           set -euxo pipefail
-          conda run -n sugar conda-pack -o sugar-conda-env.tar.gz
+          conda run -n sugar conda-pack -o sugar-conda-env.tar.gz --ignore-missing-files
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
