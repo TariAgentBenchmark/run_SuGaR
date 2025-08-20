@@ -1,0 +1,60 @@
+name: Build and Pack SuGaR Conda Env
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '.github/workflows/build-conda-pack.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          auto-update-conda: true
+          activate-environment: sugar
+          use-mamba: true
+
+      - name: Install conda-pack
+        shell: bash -l {0}
+        run: |
+          mamba install -y -c conda-forge conda-pack
+
+      - name: Create SuGaR environment from upstream
+        shell: bash -l {0}
+        run: |
+          set -euxo pipefail
+          # Fetch upstream environment.yml
+          curl -L --fail https://raw.githubusercontent.com/Anttwo/SuGaR/main/environment.yml -o environment.yml
+          # Create the env named sugar
+          mamba env create -f environment.yml
+
+      - name: Install SuGaR optional dependencies (if any)
+        shell: bash -l {0}
+        run: |
+          set -euxo pipefail
+          # Upstream has install.py to build extensions (if needed later). For env pack, we just ensure pip exists
+          python -V
+
+      - name: Pack environment
+        shell: bash -l {0}
+        run: |
+          set -euxo pipefail
+          conda-pack -n sugar -o sugar-conda-env.tar.gz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sugar-conda-env
+          path: sugar-conda-env.tar.gz
+          if-no-files-found: error
